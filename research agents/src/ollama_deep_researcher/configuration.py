@@ -1,12 +1,16 @@
+"""Configuration for the research assistant."""
+
 import os
 from enum import Enum
-from pydantic import BaseModel, Field
-from typing import Any, Optional, Literal
+from typing import Any, Literal, Optional
 
 from langchain_core.runnables import RunnableConfig
+from pydantic import BaseModel, Field
 
 
 class SearchAPI(Enum):
+    """Search API options."""
+
     PERPLEXITY = "perplexity"
     TAVILY = "tavily"
     DUCKDUCKGO = "duckduckgo"

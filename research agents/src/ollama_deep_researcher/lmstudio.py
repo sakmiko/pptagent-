@@ -60,7 +60,6 @@ class ChatLMStudio(ChatOpenAI):
         **kwargs: Any,
     ) -> ChatResult:
         """Generate a chat response using LMStudio's OpenAI-compatible API."""
-
         if self.format == "json":
             # Set response_format for JSON mode
             kwargs["response_format"] = {"type": "json_object"}
