@@ -1,41 +1,42 @@
-import json
+"""LangGraph workflow definition for the research assistant."""
 
-from pydantic import BaseModel, Field
-from typing_extensions import Literal
+import json
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langchain_ollama import ChatOllama
-from langgraph.graph import START, END, StateGraph
+from langgraph.graph import END, START, StateGraph
+from pydantic import BaseModel, Field
+from typing_extensions import Literal
 
-from ollama_deep_researcher.configuration import Configuration, SearchAPI
-from ollama_deep_researcher.utils import (
-    deduplicate_and_format_sources,
-    tavily_search,
-    format_sources,
-    perplexity_search,
-    duckduckgo_search,
-    searxng_search,
-    strip_thinking_tokens,
-    get_config_value,
+from ollama_deep_researcher.configuration import Configuration
+from ollama_deep_researcher.lmstudio import ChatLMStudio
+from ollama_deep_researcher.prompts import (
+    get_current_date,
+    json_mode_query_instructions,
+    json_mode_reflection_instructions,
+    query_writer_instructions,
+    reflection_instructions,
+    summarizer_instructions,
+    tool_calling_query_instructions,
+    tool_calling_reflection_instructions,
 )
 from ollama_deep_researcher.state import (
     SummaryState,
     SummaryStateInput,
     SummaryStateOutput,
 )
-from ollama_deep_researcher.prompts import (
-    query_writer_instructions,
-    summarizer_instructions,
-    reflection_instructions,
-    get_current_date,
-    json_mode_query_instructions,
-    tool_calling_query_instructions,
-    json_mode_reflection_instructions,
-    tool_calling_reflection_instructions,
+from ollama_deep_researcher.utils import (
+    deduplicate_and_format_sources,
+    duckduckgo_search,
+    format_sources,
+    get_config_value,
+    perplexity_search,
+    searxng_search,
+    strip_thinking_tokens,
+    tavily_search,
 )
-from ollama_deep_researcher.lmstudio import ChatLMStudio
 
 # Constants
 MAX_TOKENS_PER_SOURCE = 1000
@@ -49,8 +50,8 @@ def generate_search_query_with_structured_output(
     tool_query_field: str,
     json_query_field: str,
 ):
-    """Helper function to generate search queries using either tool calling or JSON mode.
-    
+    """Generate search queries using either tool calling or JSON mode.
+
     Args:
         configurable: Configuration object
         messages: List of messages to send to LLM
@@ -58,7 +59,7 @@ def generate_search_query_with_structured_output(
         fallback_query: Fallback search query if extraction fails
         tool_query_field: Field name in tool args containing the query
         json_query_field: Field name in JSON response containing the query
-        
+
     Returns:
         Dictionary with "search_query" key
     """
@@ -80,7 +81,6 @@ def generate_search_query_with_structured_output(
         # Use JSON mode
         llm = get_llm(configurable)
         result = llm.invoke(messages)
-        print(f"result: {result}")
         content = result.content
 
         try:
@@ -95,7 +95,7 @@ def generate_search_query_with_structured_output(
             return {"search_query": fallback_query}
 
 def get_llm(configurable: Configuration):
-    """Helper function to initialize LLM based on configuration.
+    """Initialize LLM based on configuration.
 
     Uses JSON mode if use_tool_calling is False, otherwise regular mode for tool calling.
 
@@ -148,7 +148,6 @@ def generate_query(state: SummaryState, config: RunnableConfig):
     Returns:
         Dictionary with state update, including search_query key containing the generated query
     """
-
     # Format the prompt
     current_date = get_current_date()
     formatted_prompt = query_writer_instructions.format(
@@ -160,9 +159,7 @@ def generate_query(state: SummaryState, config: RunnableConfig):
 
     @tool
     class Query(BaseModel):
-        """
-        This tool is used to generate a query for web search.
-        """
+        """Tool to generate a query for web search."""
 
         query: str = Field(description="The actual search query string")
         rationale: str = Field(
@@ -202,7 +199,6 @@ def web_research(state: SummaryState, config: RunnableConfig):
     Returns:
         Dictionary with state update, including sources_gathered, research_loop_count, and web_research_results
     """
-
     # Configure
     configurable = Configuration.from_runnable_config(config)
 
@@ -276,7 +272,6 @@ def summarize_sources(state: SummaryState, config: RunnableConfig):
     Returns:
         Dictionary with state update, including running_summary key containing the updated summary
     """
-
     # Existing summary
     existing_summary = state.running_summary
 
@@ -342,7 +337,6 @@ def reflect_on_summary(state: SummaryState, config: RunnableConfig):
     Returns:
         Dictionary with state update, including search_query key containing the generated follow-up query
     """
-
     # Generate a query
     configurable = Configuration.from_runnable_config(config)
     formatted_prompt = reflection_instructions.format(
@@ -351,9 +345,7 @@ def reflect_on_summary(state: SummaryState, config: RunnableConfig):
 
     @tool
     class FollowUpQuery(BaseModel):
-        """
-        This tool is used to generate a follow-up query to address a knowledge gap.
-        """
+        """Tool to generate a follow-up query to address a knowledge gap."""
 
         follow_up_query: str = Field(
             description="Write a specific question to address this gap"
@@ -397,7 +389,6 @@ def finalize_summary(state: SummaryState):
     Returns:
         Dictionary with state update, including running_summary key containing the formatted final summary with sources
     """
-
     # Deduplicate sources before joining
     seen_sources = set()
     unique_sources = []
@@ -433,7 +424,6 @@ def route_research(
     Returns:
         String literal indicating the next node to visit ("web_research" or "finalize_summary")
     """
-
     configurable = Configuration.from_runnable_config(config)
     if state.research_loop_count <= configurable.max_web_research_loops:
         return "web_research"

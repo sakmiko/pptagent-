@@ -189,32 +189,3 @@ There are [various ways](https://langchain-ai.github.io/langgraph/concepts/#depl
 
 A TypeScript port of this project (without Perplexity search) is available at:
 https://github.com/PacoVK/ollama-deep-researcher-ts
-
-## Running as a Docker container
-
-The included `Dockerfile` only runs LangChain Studio with local-deep-researcher as a service, but does not include Ollama as a dependant service. You must run Ollama separately and configure the `OLLAMA_BASE_URL` environment variable. Optionally you can also specify the Ollama model to use by providing the `LOCAL_LLM` environment variable.
-
-Clone the repo and build an image:
-```
-$ docker build -t local-deep-researcher .
-```
-
-Run the container:
-```
-$ docker run --rm -it -p 2024:2024 \
-  -e SEARCH_API="tavily" \ 
-  -e TAVILY_API_KEY="tvly-***YOUR_KEY_HERE***" \
-  -e LLM_PROVIDER=ollama \
-  -e OLLAMA_BASE_URL="http://host.docker.internal:11434/" \
-  -e LOCAL_LLM="llama3.2" \  
-  local-deep-researcher
-```
-
-NOTE: You will see log message:
-```
-2025-02-10T13:45:04.784915Z [info     ] 🎨 Opening Studio in your browser... [browser_opener] api_variant=local_dev message=🎨 Opening Studio in your browser...
-URL: https://smith.langchain.com/studio/?baseUrl=http://0.0.0.0:2024
-```
-...but the browser will not launch from the container.
-
-Instead, visit this link with the correct baseUrl IP address: [`https://smith.langchain.com/studio/thread?baseUrl=http://127.0.0.1:2024`](https://smith.langchain.com/studio/thread?baseUrl=http://127.0.0.1:2024)

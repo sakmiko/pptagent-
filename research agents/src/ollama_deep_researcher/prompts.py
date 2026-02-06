@@ -1,8 +1,14 @@
+"""Prompt templates for the research assistant."""
+
 from datetime import datetime
 
 
-# Get current date in a readable format
-def get_current_date():
+def get_current_date() -> str:
+    """Get current date in a readable format.
+
+    Returns:
+        str: Current date formatted as "Month DD, YYYY".
+    """
     return datetime.now().strftime("%B %d, %Y")
 
 
@@ -33,7 +39,7 @@ Format your response as a JSON object with ALL three of these exact keys:
 
 Provide your response in JSON format:"""
 
-tool_calling_query_instructions = """<INSTRUCTIONS   >
+tool_calling_query_instructions = """<INSTRUCTIONS>
 Call the Query tool to format your response with the following keys:
    - "query": The actual search query string
    - "rationale": Brief explanation of why this query is relevant
@@ -58,13 +64,13 @@ When EXTENDING an existing summary:
     a. If it's related to existing points, integrate it into the relevant paragraph.                               
     b. If it's entirely new but relevant, add a new paragraph with a smooth transition.                            
     c. If it's not relevant to the user topic, skip it.                                                            
-4. Ensure all additions are relevant to the user's topic.                                                         
-5. Verify that your final output differs from the input summary.                                                                                                                                                            
-< /REQUIREMENTS >
+4. Ensure all additions are relevant to the user's topic.
+5. Verify that your final output differs from the input summary.
+</REQUIREMENTS>
 
-< FORMATTING >
-- Start directly with the updated summary, without preamble or titles. Do not use XML tags in the output.  
-< /FORMATTING >
+<FORMATTING>
+- Start directly with the updated summary, without preamble or titles. Do not use XML tags in the output.
+</FORMATTING>
 
 <Task>
 Think carefully about the provided Context first. Then generate a summary of the context to address the User Input.
